@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# Usage: $0 fileName [cutStartMin cutStartSec] cutStopMin cutStopSec
+
+FILE="$1"
+EXT="${FILE##*.}"
+
+# Check parameters count
+if [ $# -ne 3 ] && [ $# -ne 5 ]
+then
+	echo "Error: Incorrect amount of parameters ($# parameters)"
+	echo "Usage: $0 fileName [cutStartMin cutStartSec] cutStopMin cutStopSec"
+	echo "If cutStopMin=0 and cutStopSec=0, then video cuts from cutStartMin:cutStartSec to the end"
+	exit 1
+fi
+
+# Check parameters type (all except first one must be integers)
+# src: https://stackoverflow.com/a/806923/7191011
+re='^[0-9]+$'
+for v in "${@:2}" # Skip first, src: https://stackoverflow.com/a/8906229/7191011
+do
+	if ! [[ $v =~ $re ]]
+	then
+		echo "Error: Parameter \"$v\" is not an integer"
+		exit 2
+	fi
+done
+
+# Check if file exits
+if ! [[ -f $FILE ]]
+then
+	echo "Error: File \"$FILE\" does not exits, is directory or is unreadable"
+	exit 3
+fi
+
+# If set just end => cut from start to $2:$3
+if [ $# -eq 3 ]
+then
+	ffmpeg -i "$FILE" -c copy -t `expr 60 \* $2 + $3` "$FILE.cut.$EXT"
+fi
+
+# If set both => cut from $2:$3 to $4:$5
+if [ $# -eq 5 ] 
+then
+	if [[ $4 -eq 0 ]] && [[ $5 -eq 0 ]]
+	then
+		# Cut from $2:$3 to the end
+		ffmpeg -i "$FILE" -c copy -ss `expr 60 \* $2 + $3` "$FILE.cut.$EXT"
+	else
+		# Cut stop is specified
+		ffmpeg -i "$FILE" -c copy -ss `expr 60 \* $2 + $3` -t `expr 60 \* $4 + $5 - 60 \* $2 - $3` "$FILE.cut.$EXT"
+	fi
+fi

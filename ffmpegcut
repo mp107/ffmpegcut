@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage: $0 fileName [cutStartMin cutStartSec] cutStopMin cutStopSec
+# Usage: $0 fileName cutStartMin cutStartSec [cutStopMin cutStopSec]
 
 FILE="$1"
 EXT="${FILE##*.}"
@@ -9,8 +9,8 @@ EXT="${FILE##*.}"
 if [ $# -ne 3 ] && [ $# -ne 5 ]
 then
 	echo "Error: Incorrect amount of parameters ($# parameters)"
-	echo "Usage: $0 fileName [cutStartMin cutStartSec] cutStopMin cutStopSec"
-	echo "If cutStopMin=0 and cutStopSec=0, then video cuts from cutStartMin:cutStartSec to the end"
+	echo "Usage: $0 fileName cutStartMin cutStartSec [cutStopMin cutStopSec]"
+	echo "If cutStopMin and cutStopSec are unspecified, then video cuts from cutStartMin:cutStartSec to the end"
 	exit 1
 fi
 

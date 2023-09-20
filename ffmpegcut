@@ -1,16 +1,17 @@
 #!/bin/bash
 
-# Usage: $0 fileName cutStartMin cutStartSec [cutStopMin cutStopSec]
+# Usage: $0 fileName [cutStartMin cutStartSec] cutStopMin cutStopSec
 
 FILE="$1"
 EXT="${FILE##*.}"
 
 # Check parameters count
-if [ $# -ne 3 ] && [ $# -ne 5 ]
+if [ $# -ne 3 ] && [ $# -ne 5 ] && [ $# -ne 7 ]
 then
 	echo "Error: Incorrect amount of parameters ($# parameters)"
-	echo "Usage: $0 fileName cutStartMin cutStartSec [cutStopMin cutStopSec]"
-	echo "If cutStopMin and cutStopSec are unspecified, then video cuts from cutStartMin:cutStartSec to the end"
+	echo "Usage: $0 fileName [cutStartMin cutStartSec] cutStopMin cutStopSec"
+	echo "Or: $0 fileName cutStartMin cutStartSec cutStartMs cutStopMin cutStopSec cutStopMs"
+	echo "If cutStopMin=0 and cutStopSec=0, then video cuts from cutStartMin:cutStartSec to the end"
 	exit 1
 fi
 
@@ -48,6 +49,20 @@ then
 		ffmpeg -i "$FILE" -c copy -ss `expr 60 \* $2 + $3` "$FILE.cut.$EXT"
 	else
 		# Cut stop is specified
-		ffmpeg -i "$FILE" -c copy -ss `expr 60 \* $2 + $3` -t `expr 60 \* $4 + $5 - 60 \* $2 - $3` "$FILE.cut.$EXT"
+		ffmpeg -i "$FILE" -c copy -ss `expr 60 \* $2 + $3` -to "$4:$5.$6" "$FILE.cut.$EXT"
 	fi
 fi
+
+# If set both precised to ms => cut from $2:$3.$4 to $5:$6.$7
+if [ $# -eq 7 ] 
+then
+	if [[ $5 -eq 0 ]] && [[ $6 -eq 0 ]] && [[ $7 -eq 0 ]] 
+	then
+		# Cut from $2:$3.$4 to the end
+		ffmpeg -i "$FILE" -c copy -ss `expr 60 \* $2 + $3`.$4 "$FILE.cut.$EXT"
+	else
+		# Cut stop is specified
+		ffmpeg -i "$FILE" -c copy -ss "$2:$3.$4" -to "$5:$6.$7" "$FILE.cut.$EXT"
+	fi
+fi
+
